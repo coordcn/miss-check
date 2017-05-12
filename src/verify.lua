@@ -4,8 +4,6 @@
 
 local types = require("miss-validator.src.types")
 
-local _M = {}
-
 -- @brief       verify input by params
 -- @param       input   {object} 
 -- @param       params  {array[object]} 
@@ -29,8 +27,8 @@ local _M = {}
 -- @return      msg     {string}
 --              msg == nil => ok
 --              msg ~= nil => error msg
-function _M.verify(input, params)
+local function verify(input, params)
         return types.object(input, params)
 end
 
-return _M
+return verify

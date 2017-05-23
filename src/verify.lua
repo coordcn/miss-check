@@ -28,7 +28,7 @@ local types = require("miss-validator.src.types")
 --              msg == nil => ok
 --              msg ~= nil => error msg
 local function verify(input, params)
-        return types.object(input, params)
+        return types.object(input, params, "")
 end
 
 return verify

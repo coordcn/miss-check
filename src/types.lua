@@ -2,6 +2,9 @@
 -- @author      QianYe(coordcn@163.com)
 -- @license     MIT license
 
+local core      = require("miss-core")
+local utils     = core.utils
+
 local _M = {}
 
 local LENGTH_EQ = " length must be equal to "
@@ -11,6 +14,7 @@ local NUMBER_GT = " must be great then "
 local NUMBER_GE = " must be great then or equal to "
 local NUMBER_LT = " must be less then "
 local NUMBER_LE = " must be less then or equal to "
+local ONE_OF    = " must be one of "
 
 local function checkLength(param, length, names)
         if param.length then
@@ -58,6 +62,29 @@ local function checkNumber(value, param, names)
         end
 end
 
+local function checkPattern(value, pattern, patternType, param, names)
+        if patternType == "table" then
+                if not pattern[value] then
+                        if param._pattern then
+                                return nil, names .. ONE_OF .. param._pattern  
+                        else
+                                local keys = utils.keys(pattern)
+                                local ret, err = cjson.encode(keys)
+                                if ret then
+                                        param._pattern = ret
+                                        return names .. ONE_OF .. ret
+                                else
+                                        error(names .. " pattern json encode error " .. err)
+                                end
+                        end
+                end
+        elseif patternType = "function" then
+                if not pattern(value) then
+                        return names .. " is invalid"
+                end
+        end
+end
+
 local function handleNil(param, names)
         if param.required then
                 return nil, names .. " is required"
@@ -82,25 +109,18 @@ function _M.string(value, param, names)
         end
 
         local pattern = param.pattern
-        local patternType = type(pattern)
-        if patternType == "string" then
-                local match = string.match(value, pattern)
-                if match ~= value then
-                        return nil, names .. " has invalid charactors" 
-                end
-        elseif patternType == "table" then
-                if not pattern[value] then
-                        if param._pattern then
-                                return nil, names .. " must be one of " .. param._pattern  
-                        else
-                                local ret, err = cjson.encode(pattern)
-                                if ret then
-                                        param._pattern = ret
-                                        return nil, names .. " must be one of " .. ret
-                                else
-                                        error(names .. " pattern json encode error " .. err)
-                                end
+        if pattern then
+                local patternType = type(pattern)
+                if patternType == "string" then
+                        local match = string.match(value, pattern)
+                        if match ~= value then
+                                return nil, names .. " has invalid charactors" 
                         end
+                end
+
+                msg = checkPattern(value, pattern, patternType, param, names)
+                if msg then
+                        return nil, msg
                 end
         end
         
@@ -128,6 +148,15 @@ function _M.number(value, param, names)
                 return nil, names .. " must be number" 
         end
 
+        local pattern = param.pattern
+        if pattern then
+                local patternType = type(pattern)
+                msg = checkPattern(value, pattern, patternType, param, names)
+                if msg then
+                        return nil, msg
+                end
+        end
+
         local msg = checkNumber(value, param, names)
         if msg then
                 return nil, msg
@@ -152,6 +181,15 @@ function _M.numberic(value, param, names)
                 return nil, names .. " must be number or string" 
         end
 
+        local pattern = param.pattern
+        if pattern then
+                local patternType = type(pattern)
+                msg = checkPattern(value, pattern, patternType, param, names)
+                if msg then
+                        return nil, msg
+                end
+        end
+
         local msg = checkNumber(value, param, names)
         if msg then
                 return nil, msg
@@ -169,8 +207,9 @@ function _M.object(value, param, names)
                 return nil, names .. " must be object" 
         end
 
-        for i = 1, #param do
-                local arg       = param[i]
+        local args = param.children
+        for i = 1, #args do
+                local arg       = args[i]
                 local handle    = _M[arg.type]
                 local argName   = arg.name
                 local tmp       = value[argName]

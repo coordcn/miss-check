@@ -87,9 +87,9 @@ end
 
 local function handleNil(param, names)
         if param.required then
-                return nil, names .. " is required"
+                return names .. " is required"
         else
-                return param.default, nil
+                return nil, param.default
         end
 end
 
@@ -99,13 +99,13 @@ function _M.string(value, param, names)
         end
 
         if type(value) ~= "string" then
-                return nil, names .. " must be string" 
+                return names .. " must be string" 
         end
 
         local length = #value
         local msg = checkLength(param, length, names)
         if msg then
-                return nil, msg
+                return msg
         end
 
         local pattern = param.pattern
@@ -114,17 +114,17 @@ function _M.string(value, param, names)
                 if patternType == "string" then
                         local match = string.match(value, pattern)
                         if match ~= value then
-                                return nil, names .. " has invalid charactors" 
+                                return names .. " has invalid charactors" 
                         end
                 end
 
                 msg = checkPattern(value, pattern, patternType, param, names)
                 if msg then
-                        return nil, msg
+                        return msg
                 end
         end
         
-        return value, nil
+        return nil, value
 end
 
 function _M.boolean(value, param, names)
@@ -133,10 +133,10 @@ function _M.boolean(value, param, names)
         end
 
         if type(value) ~= "boolean" then
-                return nil, names .. " must be boolean" 
+                return names .. " must be boolean" 
         end
 
-        return value,  nil
+        return nil, value
 end
 
 function _M.number(value, param, names)
@@ -145,7 +145,7 @@ function _M.number(value, param, names)
         end
 
         if type(value) ~= "number" then
-                return nil, names .. " must be number" 
+                return names .. " must be number" 
         end
 
         local pattern = param.pattern
@@ -153,16 +153,16 @@ function _M.number(value, param, names)
                 local patternType = type(pattern)
                 msg = checkPattern(value, pattern, patternType, param, names)
                 if msg then
-                        return nil, msg
+                        return msg
                 end
         end
 
         local msg = checkNumber(value, param, names)
         if msg then
-                return nil, msg
+                return msg
         end
 
-        return value, nil
+        return nil, value
 end
 
 function _M.numberic(value, param, names)
@@ -175,10 +175,10 @@ function _M.numberic(value, param, names)
         elseif valueType == "string" then
                 value = tonumber(value)
                 if not value then
-                        return nil, names .. " is invalid number" 
+                        return names .. " is invalid number" 
                 end
         else
-                return nil, names .. " must be number or string" 
+                return names .. " must be number or string" 
         end
 
         local pattern = param.pattern
@@ -186,16 +186,16 @@ function _M.numberic(value, param, names)
                 local patternType = type(pattern)
                 msg = checkPattern(value, pattern, patternType, param, names)
                 if msg then
-                        return nil, msg
+                        return msg
                 end
         end
 
         local msg = checkNumber(value, param, names)
         if msg then
-                return nil, msg
+                return msg
         end
 
-        return value, nil
+        return nil, value
 end
 
 function _M.object(value, param, names)
@@ -204,7 +204,7 @@ function _M.object(value, param, names)
         end
 
         if type(value) ~= "table" then
-                return nil, names .. " must be object" 
+                return names .. " must be object" 
         end
 
         local args = param.children
@@ -216,13 +216,13 @@ function _M.object(value, param, names)
                 local tmpNames  = names .. "." .. argName
                 local val, msg  = handle(tmp, arg, tmpNames)
                 if msg then
-                        return nil, msg
+                        return msg
                 end
 
                 value[argName] = val
         end
 
-        return value, nil
+        return nil, value
 end
 
 function _M.array(value, param, names)
@@ -231,13 +231,13 @@ function _M.array(value, param, names)
         end
 
         if type(value) ~= "table" then
-                return nil, names .. " must be array" 
+                return names .. " must be array" 
         end
 
         local length = #value
         local msg = checkLength(param, length, names)
         if msg then
-                return nil, msg
+                return msg
         end
 
         local arg = param.children[1]
@@ -248,13 +248,13 @@ function _M.array(value, param, names)
                 local tmpNames  = names .. "[" .. i .. "]"
                 local val, msg  = handle(tmp, arg, tmpNames)
                 if msg then
-                        return nil, msg
+                        return msg
                 end
 
                 value[i] = val
         end
 
-        return value, nil
+        return nil, value
 end
 
 return _M

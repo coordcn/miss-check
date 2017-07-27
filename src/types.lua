@@ -165,7 +165,7 @@ function _M.number(value, param, names)
         return nil, value
 end
 
-function _M.numberic(value, param, names)
+function _M.numeric(value, param, names)
         if value == nil then
                 return handleNil(param, names)
         end
